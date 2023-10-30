@@ -13,29 +13,30 @@ import argparse
 parser = argparse.ArgumentParser(description='Cell size detector')
 parser.add_argument('--input', '-i', type=str, default='input', help='input directory')
 parser.add_argument('--output', '-o', type=str, default='output', help='output directory')
-parser.add_argument('--width', '-w', type=float, default=2.71, help='width of pixel')
-parser.add_argument('--height', '-h', type=float, default=2.86, help='height of pixel')
+parser.add_argument('--width', '-wi', type=float, default=2.71, help='width of pixel')
+parser.add_argument('--height', '-he', type=float, default=2.86, help='height of pixel')
+args = parser.parse_args()   
 
-WIDTH_PIXEL = parser.width
-HEIGHT_PIXEL = parser.height
+WIDTH_PIXEL = args.width
+HEIGHT_PIXEL = args.height
 AREA_PIXEL = WIDTH_PIXEL * HEIGHT_PIXEL
 
-BASE_DIR = pathlib.Path(parser.input)
+BASE_DIR = pathlib.Path(args.input)
 IMAGES = BASE_DIR.glob('*.tif')
 
 def main():
     print(f'Start load_img {BASE_DIR.absolute()}')
     imgs = [io.imread(path) for path in IMAGES] #load images
     imgs = [rgb2gray(img) for img in imgs] #convert to grayscale
-    result = []
     id_ims = []
+    areas = []
+    wids = []
+    heis = []
+    id_cells = []
     print(f'Start detecting cell size. number of imgs: {len(imgs)}')
     for id_im, img in enumerate(imgs):
         contours = measure.find_contours(img, 0.1)
-        areas = []
-        wids = []
-        heis = []
-        id_cells = []
+
         
         for cell_id, contour in enumerate(contours):
             c = np.expand_dims(contour.astype(np.float32), 1)
@@ -51,20 +52,19 @@ def main():
             id_ims.append(id_im)
             id_cells.append(cell_id)
 
-        result.append([id_ims, id_cells, areas, wids, heis])
 
     result_df = pd.DataFrame()
-    result_df['id_im'] = [i[0] for i in result]
-    result_df['id_cell'] = [i[1] for i in result]
-    result_df['area'] = [i[2] for i in result]
-    result_df['wid'] = [i[3] for i in result]
-    result_df['hei'] = [i[4] for i in result]
+    result_df['id_im'] = id_ims
+    result_df['id_cell'] = id_cells
+    result_df['area'] = areas * AREA_PIXEL
+    result_df['wid'] = wids * WIDTH_PIXEL
+    result_df['hei'] = heis * HEIGHT_PIXEL
 
     print(f'Mean cell size: {result_df["area"].mean()}')
     print(f'Sd cell size: {result_df["area"].std()}')
     
-    result_df.to_csv(parser.output+'result.csv', index=False)
-    print(f'Done saving result to {parser.output}')
+    result_df.to_csv(args.output+'result.csv', index=False)
+    print(f'Done saving result to {args.output}')
 
 if __name__ == '__main__':
     main()
