@@ -37,7 +37,7 @@ def main():
         heis = []
         id_cells = []
         
-        for cell_id, contour in enumerate(contours:
+        for cell_id, contour in enumerate(contours):
             c = np.expand_dims(contour.astype(np.float32), 1)
             # Convert it to UMat object
             c = cv2.UMat(c)
@@ -63,7 +63,7 @@ def main():
     print(f'Mean cell size: {result_df["area"].mean()}')
     print(f'Sd cell size: {result_df["area"].std()}')
     
-    result_df.to_csv(parser.output+'result.csv'., index=False)
+    result_df.to_csv(parser.output+'result.csv', index=False)
     print(f'Done saving result to {parser.output}')
 
 if __name__ == '__main__':
